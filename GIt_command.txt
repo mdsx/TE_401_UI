@@ -1,0 +1,8 @@
+Adding or Editing Files:
+git add FILENAME
+git commit -m "COMMIT MESSAGE"
+git push
+
+Getting new files/changes:
+git status
+git pull
