@@ -97,7 +97,8 @@ holoSpace = figure(1);
 imagesc(hologram);
 title('Hologram - Space Domain');
 colormap gray;
-% holoSpace.Visible = 'off';
+holoSpace.Visible = 'off';
+saveas(holoSpace,'holoSpace.png');
 
 %% Fourier Domain
 holo_FT = fft2(hologram);
@@ -107,7 +108,8 @@ holoFourier = figure(2);
 imagesc(abs(holo_FT));
 title('Hologram - Fourier Domain');
 caxis(caxis().*[0,0.01]);               % easier to determine frequency peaks
-% holoFourier.Visible = 'off';
+holoFourier.Visible = 'off';
+saveas(holoFourier,'holoFourier.png');
 
 %% Filter
 holo_filter = zeros(N);
@@ -119,7 +121,8 @@ holo_FT = holo_FT.*holo_filter;
 holoFiltered = figure(3);
 imagesc(abs(holo_FT));
 title('Filtered Hologram');
-% holoFiltered.Visible = 'off';
+holoFiltered.Visible = 'off';
+saveas(holoFiltered,'holoFiltered.png');
 
 %% Space Domain
 holo_IFT = fftshift(holo_FT);
@@ -134,7 +137,8 @@ imagesc(angle(holo_IFT));
 title('Phase');
 suptitle('Hologram');
 colormap gray;
-% holoAmpPhase.Visible = 'off';
+holoAmpPhase.Visible = 'off';
+saveas(holoAmpPhase,'holoAmpPhase.png');
 
 %% Reconstruction
 plane_wave = zeros(N);              % plane wave to match reference field
@@ -167,7 +171,10 @@ imagesc(angle(reconstruction));
 title('Phase');
 suptitle(sprintf('Image vs. Reconstruction: Corr Coef = %0.5g', r_squared));
 colormap gray;
-% holoCompare.Visible = 'off';
+holoCompare.Visible = 'off';
+saveas(holoCompare,'holoCompare.png');
+imshow('holoCompare.png','Parent',handles.axes1);
+imshow('holoSpace.png','Parent',handles.axes2);
 
 %% END HOLOGRAM CODE
 
@@ -202,6 +209,7 @@ function spaceDomain_Callback(hObject, eventdata, handles)
 if get(hObject, 'Value')
     str = sprintf('Space Domain');
     disp(str);
+    imshow('holoSpace.png','Parent',handles.axes2);
 end
 
 
@@ -215,6 +223,7 @@ function fourierUnfiltered_Callback(hObject, eventdata, handles)
 if get(hObject, 'Value')
     str = sprintf('Fourier Unfiltered');
     disp(str);
+    imshow('holoFourier.png','Parent',handles.axes2);
 end
 
 
@@ -228,6 +237,7 @@ function fourierFiltered_Callback(hObject, eventdata, handles)
 if get(hObject, 'Value')
     str = sprintf('Fourier Filtered');
     disp(str);
+    imshow('holoFiltered.png','Parent',handles.axes2);
 end
 
 
@@ -241,6 +251,7 @@ function ampPhase_Callback(hObject, eventdata, handles)
 if get(hObject, 'Value')
     str = sprintf('Amplitude & Phase');
     disp(str);
+    imshow('holoAmpPhase.png','Parent',handles.axes2);
 end
 
 %% DONE
