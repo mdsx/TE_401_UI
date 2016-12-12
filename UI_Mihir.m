@@ -22,7 +22,7 @@ function varargout = UI_Mihir(varargin)
 
 % Edit the above text to modify the response to help UI_Mihir
 
-% Last Modified by GUIDE v2.5 11-Dec-2016 21:48:34
+% Last Modified by GUIDE v2.5 12-Dec-2016 00:29:16
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -255,3 +255,100 @@ if get(hObject, 'Value')
 end
 
 %% DONE
+
+
+% --- Executes on button press in param1.
+function param1_Callback(hObject, eventdata, handles)
+% hObject    handle to param1 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hint: get(hObject,'Value') returns toggle state of param1
+
+
+% --- Executes on button press in param2.
+function param2_Callback(hObject, eventdata, handles)
+% hObject    handle to param2 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hint: get(hObject,'Value') returns toggle state of param2
+
+
+% --- Executes on button press in param3.
+function param3_Callback(hObject, eventdata, handles)
+% hObject    handle to param3 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hint: get(hObject,'Value') returns toggle state of param3
+
+
+% --- Executes on button press in param4.
+function param4_Callback(hObject, eventdata, handles)
+% hObject    handle to param4 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hint: get(hObject,'Value') returns toggle state of param4
+
+
+% --- Executes on button press in param5.
+function param5_Callback(hObject, eventdata, handles)
+% hObject    handle to param5 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hint: get(hObject,'Value') returns toggle state of param5
+
+
+% --- Executes on slider movement.
+function convFilter_Callback(hObject, eventdata, handles)
+% hObject    handle to convFilter (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: get(hObject,'Value') returns position of slider
+%        get(hObject,'Min') and get(hObject,'Max') to determine range of slider
+
+
+% --- Executes during object creation, after setting all properties.
+function convFilter_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to convFilter (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: slider controls usually have a light gray background.
+if isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor',[.9 .9 .9]);
+end
+
+
+% --- Executes on selection change in colorFilters.
+function colorFilters_Callback(hObject, eventdata, handles)
+% hObject    handle to colorFilters (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: contents = cellstr(get(hObject,'String')) returns colorFilters contents as cell array
+%        contents{get(hObject,'Value')} returns selected item from colorFilters
+
+
+% --- Executes during object creation, after setting all properties.
+function colorFilters_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to colorFilters (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: popupmenu controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+
+% --- Executes on button press in export.
+function export_Callback(hObject, eventdata, handles)
+% hObject    handle to export (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
