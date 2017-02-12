@@ -1,0 +1,354 @@
+function varargout = UI_Mihir(varargin)
+% UI_MIHIR MATLAB code for UI_Mihir.fig
+%      UI_MIHIR, by itself, creates a new UI_MIHIR or raises the existing
+%      singleton*.
+%
+%      H = UI_MIHIR returns the handle to a new UI_MIHIR or the handle to
+%      the existing singleton*.
+%
+%      UI_MIHIR('CALLBACK',hObject,eventData,handles,...) calls the local
+%      function named CALLBACK in UI_MIHIR.M with the given input arguments.
+%
+%      UI_MIHIR('Property','Value',...) creates a new UI_MIHIR or raises the
+%      existing singleton*.  Starting from the left, property value pairs are
+%      applied to the GUI before UI_Mihir_OpeningFcn gets called.  An
+%      unrecognized property name or invalid value makes property application
+%      stop.  All inputs are passed to UI_Mihir_OpeningFcn via varargin.
+%
+%      *See GUI Options on GUIDE's Tools menu.  Choose "GUI allows only one
+%      instance to run (singleton)".
+%
+% See also: GUIDE, GUIDATA, GUIHANDLES
+
+% Edit the above text to modify the response to help UI_Mihir
+
+% Last Modified by GUIDE v2.5 12-Dec-2016 00:29:16
+
+% Begin initialization code - DO NOT EDIT
+gui_Singleton = 1;
+gui_State = struct('gui_Name',       mfilename, ...
+                   'gui_Singleton',  gui_Singleton, ...
+                   'gui_OpeningFcn', @UI_Mihir_OpeningFcn, ...
+                   'gui_OutputFcn',  @UI_Mihir_OutputFcn, ...
+                   'gui_LayoutFcn',  [] , ...
+                   'gui_Callback',   []);
+if nargin && ischar(varargin{1})
+    gui_State.gui_Callback = str2func(varargin{1});
+end
+
+if nargout
+    [varargout{1:nargout}] = gui_mainfcn(gui_State, varargin{:});
+else
+    gui_mainfcn(gui_State, varargin{:});
+end
+% End initialization code - DO NOT EDIT
+
+
+% --- Executes just before UI_Mihir is made visible.
+function UI_Mihir_OpeningFcn(hObject, eventdata, handles, varargin)
+% This function has no output args, see OutputFcn.
+% hObject    handle to figure
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+% varargin   command line arguments to UI_Mihir (see VARARGIN)
+
+%% Clears
+clc;						% clear cmd window
+
+%% BEGIN HOLOGRAM CODE
+%% Parameters:
+image = 'cameraman.tif';    % image to reconstruct
+
+a = 8.5e0;                  % phase equation constant []
+b = 5.2e-3;                 % phase equation constant []
+k = @(t) (a*t);             % user-determined phase equation
+
+t = 0;                      % initial time [us]
+dt = 1;                     % time step [us]
+
+filter_width = 144;         % width of Fourier filter []
+filter_center_x = 77;       % x-position center of Fourier filter []
+filter_center_y = 440;      % y-position center of Fourier filter []
+
+k_y = 0.2291;               % reference wave k_y component [1/nm]
+k_x = 0.0023;               % reference wave k_x component [1/nm]
+
+%% Image Preparation
+Image = double(imread(image));
+Image = upsample(Image,2);                                              % upsample data points
+Image = upsample(Image',2)';
+Image = imfilter(Image,fspecial('gaussian',[10,10],2),'symmetric');     % apply Guassian filter
+[N, ~] = size(Image);                                                   % assuming image is N x N dimensions
+
+%% Construct Reference Field
+U_r = zeros(N);             % reference field is plane wave
+for y = 1:N
+    for x = 1:N
+        U_r(y,x) = exp(-1i*k(t));
+        t = t + dt;
+    end
+end
+
+%% Hologram
+hologram = Image + U_r;                 % field
+hologram = hologram.*conj(hologram);    % intensity
+
+holoSpace = figure(1);
+imagesc(hologram);
+title('Hologram - Space Domain');
+colormap gray;
+holoSpace.Visible = 'off';
+saveas(holoSpace,'holoSpace.png');
+
+%% Fourier Domain
+holo_FT = fft2(hologram);
+holo_FT = fftshift(holo_FT);
+
+holoFourier = figure(2);
+imagesc(abs(holo_FT));
+title('Hologram - Fourier Domain');
+caxis(caxis().*[0,0.01]);               % easier to determine frequency peaks
+holoFourier.Visible = 'off';
+saveas(holoFourier,'holoFourier.png');
+
+%% Filter
+holo_filter = zeros(N);
+patch = fspecial('gaussian',[filter_width+1,filter_width+1],filter_width/4);
+holo_filter(filter_center_y-filter_width/2:filter_center_y+filter_width/2, ...
+            filter_center_x-filter_width/2:filter_center_x+filter_width/2) = patch;   % bandpass filter
+holo_FT = holo_FT.*holo_filter;
+
+holoFiltered = figure(3);
+imagesc(abs(holo_FT));
+title('Filtered Hologram');
+holoFiltered.Visible = 'off';
+saveas(holoFiltered,'holoFiltered.png');
+
+%% Space Domain
+holo_IFT = fftshift(holo_FT);
+holo_IFT = ifft2(holo_IFT);
+
+holoAmpPhase = figure(4);
+subplot(1,2,1);
+imagesc(abs(holo_IFT));
+title('Amplitude');
+subplot(1,2,2);
+imagesc(angle(holo_IFT));
+title('Phase');
+suptitle('Hologram');
+colormap gray;
+holoAmpPhase.Visible = 'off';
+saveas(holoAmpPhase,'holoAmpPhase.png');
+
+%% Reconstruction
+plane_wave = zeros(N);              % plane wave to match reference field
+k_plane = 2*pi * [k_y, k_x];        % plane wave k-vector
+for y = 1:N
+    for x = 1:N
+        plane_wave(y,x) = exp(-1i*(k_plane(1)*y+k_plane(2)*x));
+    end
+end
+
+reconstruction = holo_IFT.*plane_wave;
+r_squared = corr2(abs(Image),abs(reconstruction)); % corr coef between image & recontruction
+str = sprintf('corr coef = %0.5g', r_squared);
+% asdf = 3.14159;
+% str = sprintf('pi = %0.5g', asdf);
+disp(str);
+
+holoCompare = figure(5);
+subplot(2,2,1);
+imagesc(abs(Image));
+title('Amplitude');
+subplot(2,2,2);
+imagesc(angle(Image));
+title('Phase');
+subplot(2,2,3);
+imagesc(abs(reconstruction));
+title('Amplitude');
+subplot(2,2,4);
+imagesc(angle(reconstruction));
+title('Phase');
+suptitle(sprintf('Image vs. Reconstruction: Corr Coef = %0.5g', r_squared));
+colormap gray;
+holoCompare.Visible = 'off';
+saveas(holoCompare,'holoCompare.png');
+imshow('holoCompare.png','Parent',handles.axes1);
+imshow('holoSpace.png','Parent',handles.axes2);
+
+%% END HOLOGRAM CODE
+
+%% Choose default command line output for UI_Mihir
+handles.output = hObject;
+
+% Update handles structure
+guidata(hObject, handles);
+
+% UIWAIT makes UI_Mihir wait for user response (see UIRESUME)
+% uiwait(handles.figure1);
+
+
+%% --- Outputs from this function are returned to the command line.
+function varargout = UI_Mihir_OutputFcn(hObject, eventdata, handles) 
+% varargout  cell array for returning output args (see VARARGOUT);
+% hObject    handle to figure
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Get default command line output from handles structure
+varargout{1} = handles.output;
+
+
+%% --- Executes on button press in spaceDomain.
+function spaceDomain_Callback(hObject, eventdata, handles)
+% hObject    handle to spaceDomain (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hint: get(hObject,'Value') returns toggle state of spaceDomain
+if get(hObject, 'Value')
+    str = sprintf('Space Domain');
+    disp(str);
+    imshow('holoSpace.png','Parent',handles.axes2);
+end
+
+
+%% --- Executes on button press in fourierUnfiltered.
+function fourierUnfiltered_Callback(hObject, eventdata, handles)
+% hObject    handle to fourierUnfiltered (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hint: get(hObject,'Value') returns toggle state of fourierUnfiltered
+if get(hObject, 'Value')
+    str = sprintf('Fourier Unfiltered');
+    disp(str);
+    imshow('holoFourier.png','Parent',handles.axes2);
+end
+
+
+%% --- Executes on button press in fourierFiltered.
+function fourierFiltered_Callback(hObject, eventdata, handles)
+% hObject    handle to fourierFiltered (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hint: get(hObject,'Value') returns toggle state of fourierFiltered
+if get(hObject, 'Value')
+    str = sprintf('Fourier Filtered');
+    disp(str);
+    imshow('holoFiltered.png','Parent',handles.axes2);
+end
+
+
+%% --- Executes on button press in ampPhase.
+function ampPhase_Callback(hObject, eventdata, handles)
+% hObject    handle to ampPhase (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hint: get(hObject,'Value') returns toggle state of ampPhase
+if get(hObject, 'Value')
+    str = sprintf('Amplitude & Phase');
+    disp(str);
+    imshow('holoAmpPhase.png','Parent',handles.axes2);
+end
+
+%% DONE
+
+
+% --- Executes on button press in param1.
+function param1_Callback(hObject, eventdata, handles)
+% hObject    handle to param1 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hint: get(hObject,'Value') returns toggle state of param1
+
+
+% --- Executes on button press in param2.
+function param2_Callback(hObject, eventdata, handles)
+% hObject    handle to param2 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hint: get(hObject,'Value') returns toggle state of param2
+
+
+% --- Executes on button press in param3.
+function param3_Callback(hObject, eventdata, handles)
+% hObject    handle to param3 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hint: get(hObject,'Value') returns toggle state of param3
+
+
+% --- Executes on button press in param4.
+function param4_Callback(hObject, eventdata, handles)
+% hObject    handle to param4 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hint: get(hObject,'Value') returns toggle state of param4
+
+
+% --- Executes on button press in param5.
+function param5_Callback(hObject, eventdata, handles)
+% hObject    handle to param5 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hint: get(hObject,'Value') returns toggle state of param5
+
+
+% --- Executes on slider movement.
+function convFilter_Callback(hObject, eventdata, handles)
+% hObject    handle to convFilter (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: get(hObject,'Value') returns position of slider
+%        get(hObject,'Min') and get(hObject,'Max') to determine range of slider
+
+
+% --- Executes during object creation, after setting all properties.
+function convFilter_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to convFilter (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: slider controls usually have a light gray background.
+if isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor',[.9 .9 .9]);
+end
+
+
+% --- Executes on selection change in colorFilters.
+function colorFilters_Callback(hObject, eventdata, handles)
+% hObject    handle to colorFilters (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: contents = cellstr(get(hObject,'String')) returns colorFilters contents as cell array
+%        contents{get(hObject,'Value')} returns selected item from colorFilters
+
+
+% --- Executes during object creation, after setting all properties.
+function colorFilters_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to colorFilters (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: popupmenu controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+
+% --- Executes on button press in export.
+function export_Callback(hObject, eventdata, handles)
+% hObject    handle to export (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
