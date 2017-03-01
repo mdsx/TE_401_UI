@@ -1,0 +1,85 @@
+%% Hologram Creation
+Clears all variables, clears screen, clears figure
+
+%% Parameters
+Declares the following:
+-image, from file 'cameraman.tif'
+-number a, a constant
+-number b, a constant
+-k, the solution of an equation
+--equation: k = a*t
+-t, the initial time in us
+-dt, time step in us
+
+TODO: YOU NEED TO LOOK AT THIS
+-filter_width
+-filter_center_x
+-filter_center_y
+-k_y
+-k_x
+
+
+%% Image Preparation
+Store image in variable Image
+Put a zero between every data point
+Put a column of zeroes between each column
+Apply a "Gaussian filter" (Essentially blurs the image)
+Store value of N as larger dimension of image
+
+% Construct Reference field
+Make an NxN matrix of zeroes
+For each value from 1 to N (y)
+	For each value from 1 to N (x)
+		store the value of a function in U_r(y, x)
+		increment time
+
+%% Hologram
+store into hologram the sum of the image matrices and U_r vectors, giving field
+store into hologram the complex conjugate of hologram, giving intensity
+
+show on figure 1 the image (with a title and in b&w)
+
+%% Fourier Domanin
+TODO: What is the effect of this?
+Do a 2-D Fast Fourier Transform on hologram
+Move zero-component frequencies to the middle of the array
+
+Show on figure two the scaled-color, absolute value holo_FT image
+Do some magic to make finding frequency peaks easier
+
+% Filter
+Make an N x N matrix of zeroes called holo_filter
+Create a 2-D filter based on a Gaussian filter
+Store the patch filter in holo_filter
+store in holo_FT the product of holo_FT and holo_filter
+
+show the color-scaled version of the image with a title
+
+% Space Domain
+TODO: What is the effect of this?
+Move zero-component frequencies to the middle of the array for holo_IFT
+Do a 2-D inverse fast fourier transform for holo_IFT
+
+On figure 4, create a 1 x 2 grid in position 1
+Show color information for holo_IFT
+Create a 1 X 2 grid at position 2
+show color information for holo_IFT
+put it all in black & white
+
+%% Reconstruction
+Make an N x N matrix of zeroes called plane_wave
+Make a vector k_plane with value 2*pi*[k_y, k_x]
+For all the values in plane_wave:
+	insert value of exp(-1i*(k_plane(1)*y+k_plane(2)*x));
+
+store in reconstruction holo_IFT.*plane_wave;
+Make figure 5
+Make a 2x2 grid in poition 1
+Display color data for image
+Make a 2x2 grid in position 2
+Display color data for phase angle of image
+Make a 2x2 grid in position 3
+Display color data for reconstruction
+Make a 2x2 grid in position 4
+Display color data fro phase angle of reconstruction
+Put the whole thing in black and white
