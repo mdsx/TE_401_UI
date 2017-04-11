@@ -23,7 +23,7 @@ function varargout = GUI(varargin)
 
 % Edit the above text to modify the response to help GUI
 
-% Last Modified by GUIDE v2.5 16-Mar-2017 23:05:42
+% Last Modified by GUIDE v2.5 06-Apr-2017 16:23:57
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -50,11 +50,31 @@ end
 function GUI_OpeningFcn(hObject, eventdata, handles, varargin)
 global five
 five = 5;
+%Sometimes the code would have it so the fields do not start at 0 , I'm not
+%certain if this fixes that but further testing will show.
+global kx
+kx=0
+global ky
+ky=0
+global editPhase
+global editJ2
+global barRight
+global barLeft
+editPhase=0
+editJ2=0
+barRight=0
+barLeft=0
+
+
+set(handles.uipanel5, 'Visible','off');
+
 % This function has no output args, see OutputFcn.
 % hObject    handle to figure
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 % varargin   command line arguments to GUI (see VARARGIN)
+global fullpathname
+disp(fullpathname)
 
 % Choose default command line output for GUI
 
@@ -106,8 +126,22 @@ function pushbutton28_Callback(hObject, eventdata, handles)
 handles.output = hObject;
 [filename pathname] = uigetfile({'*.png;,*.jpeg;'},'File Selector');
 global fullpathname;
+
+
 fullpathname = strcat(pathname,filename);
 set(handles.text3,'String',fullpathname);
+if(isempty(fullpathname)==0)
+    set(handles.text12, 'Visible','off');
+end
+    
+%I just set the initial display for the folder path to be "Nothing Loaded"
+% global fullpathname;
+% if( isempty(fullpathname)==0)
+%     set(handles.text3,'String','No Path Loaded')
+% else
+%     fullpathname = strcat(pathname,filename);
+%     set(handles.text3,'String',fullpathname);
+% end
 
 
 %bg_image=imread(fullpathname);
@@ -132,7 +166,7 @@ function pushbutton10_Callback(hObject, eventdata, handles)
 % hObject    handle to pushbutton10 (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
- text='Gausian Filtered Image';%Hard to change text inside the synthetic_holography function since it doesn't take "handles"
+ text='Button 1 Pressed';%Hard to change text inside the synthetic_holography function since it doesn't take "handles"
  set(handles.textStatus,'String',text);
 synthetic_holography(1);
 
@@ -142,7 +176,7 @@ function pushbutton11_Callback(hObject, eventdata, handles)
 % hObject    handle to pushbutton11 (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
- text='Image vs Reconstruction';
+ text='Button 2 Pressed';
  set(handles.textStatus,'String',text);
 synthetic_holography(2);
 
@@ -158,7 +192,7 @@ function pushbutton13_Callback(hObject, eventdata, handles)
 % hObject    handle to pushbutton13 (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-text='Fourier';
+text='Button 3 Pressed';
 set(handles.textStatus,'String',text);
 synthetic_holography(3);
 
@@ -168,7 +202,7 @@ function pushbutton14_Callback(hObject, eventdata, handles)
 % hObject    handle to pushbutton14 (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-text='Filtered Image';
+text='Button 4 Pressed';
 set(handles.textStatus,'String',text);
 synthetic_holography(4);
 
@@ -177,7 +211,7 @@ function pushbutton15_Callback(hObject, eventdata, handles)
 % hObject    handle to pushbutton15 (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-text='Resolved Imaging';
+text='Button 5 Pressed';
 set(handles.textStatus,'String',text);
 synthetic_holography(5);
 
@@ -249,7 +283,7 @@ function pushbutton25_Callback(hObject, eventdata, handles)
 % hObject    handle to pushbutton25 (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-set(handles.uipanel4, 'Visible','off');
+set(handles.uipanel5, 'Visible','off');
 set(handles.uipanel3, 'Visible','on');
 
 % --- Executes on button press in pushbutton26.
@@ -258,7 +292,7 @@ function pushbutton26_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 set(handles.uipanel3, 'Visible','off');
-set(handles.uipanel4, 'Visible','on');
+set(handles.uipanel5, 'Visible','on');
 
 
 % --- Executes on slider movement.
@@ -308,161 +342,263 @@ if isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColo
     set(hObject,'BackgroundColor',[.9 .9 .9]);
 end
 
+function edit1_Callback(hObject, eventdata, handles)
+% hObject    handle to edit1 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
 
-function [ ]= synthetic_holography(arg,handles)
-% Hologram Creation
+% Hints: get(hObject,'String') returns contents of edit1 as text
+%        str2double(get(hObject,'String')) returns contents of edit1 as a double
+ global editKx
+ editKx=str2double(get(handles.edit1,'String'))
 
-%fullpathname = strcat(pathname,filename);
-%% Parameters:
-global fullpathname; %The read image must be NxN dimensions!(tested with 256X256)
-i=imread(fullpathname);
-%image =  imshow(imadjust(i(:,:,1)));    % image to reconstruct
-image = i(:, :, 1);
-%image ='cameraman.tif';
-%greenChannel = i(:, :, 2);
-%blueChannel = i(:, :, 3);
-%We only use grayscale of image, so the green/blue is not needed.
-% Recombine separate color channels into an RGB image.
-%image = cat(3, redChannel, greenChannel, blueChannel);
+% --- Executes during object creation, after setting all properties.
+function edit1_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to edit1 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: edit controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
 
 
-a = 8.5e0;                  % phase equation constant []
-b = 5.2e-3;                 % phase equation constant []
-k = @(t) (a*t);             % user-determined phase equation
 
-t = 0;                      % initial time [us]
-dt = 1;                     % time step [us]
+function edit2_Callback(hObject, eventdata, handles)
+% hObject    handle to edit2 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
 
-filter_width = 144;         % width of Fourier filter []
-filter_center_x = 77;       % x-position center of Fourier filter []
-filter_center_y = 440;      % y-position center of Fourier filter []
-%317 to 336 not on 318 to 323
-k_y = 0.2291;               % reference wave k_y component [1/nm]
-k_x = 0.0023;               % reference wave k_x component [1/nm]
+% Hints: get(hObject,'String') returns contents of edit2 as text
+%        str2double(get(hObject,'String')) returns contents of edit2 as a double
+global editKy
+ editKy=str2double(get(handles.edit1,'String'))
 
-%% Image Preparation
-[y1,x1,z1] = size(image);
-disp(y1);
-disp(x1);
-disp(z1);
-if(x1~=y1)
-    Image = double(imread(image)); %if the variables below do not display PIXEL (ie 256 256 1) use this if not use other
+% --- Executes during object creation, after setting all properties.
+function edit2_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to edit2 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: edit controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+
+
+function edit3_Callback(hObject, eventdata, handles)
+% hObject    handle to edit3 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: get(hObject,'String') returns contents of edit3 as text
+%        str2double(get(hObject,'String')) returns contents of edit3 as a double
+global editPhase
+ editPhase=str2double(get(handles.edit1,'String'))
+
+% --- Executes during object creation, after setting all properties.
+function edit3_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to edit3 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: edit controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+
+
+function edit4_Callback(hObject, eventdata, handles)
+% hObject    handle to edit4 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: get(hObject,'String') returns contents of edit4 as text
+%        str2double(get(hObject,'String')) returns contents of edit4 as a double
+global editJ2
+ editJ2=str2double(get(handles.edit1,'String'))
+
+% --- Executes during object creation, after setting all properties.
+function edit4_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to edit4 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: edit controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+ function [ ]= synthetic_holography(arg,handles)
+ %% Hard coded constant
+% do not change
+filter_width_x = 1/1; filter_width_y = 1/12;
+j1 = 1;
+
+
+
+%% User definable constant
+% need to be made accessible from GUI
+global barRight
+global barLeft
+global editKx
+global editKy
+global editPhase
+global editJ2
+if(isempty(barRight)==1)%I sometimes have an error where the bar returns a null value,
+    %this is to handle it. Seems to happen if this has been loaded but not
+    %have any values changed yet. Sometimes.
+   barRight=0
+end
+if(isempty(barLeft)==1)
+   barLeft=0
+end
+if(isempty(editKx)==1)
+   barLeft=0
+end
+if(isempty(editKy)==1)
+   barLeft=0
+end
+if(isempty(editPhase)==1)
+   barLeft=0
+end
+if(isempty(editJ2)==1)
+   barLeft=0
+end
+
+
+
+%Default values from martin:
+% kx = 0.1;  ky = 305.35;     
+% phasekx = -1.5; phaseky = 0.6; 
+% phase_offset = 3;
+% j2 = 0.94;  
+
+kx = .1 + .5* barLeft;  %this is totally arbitrary values
+ky = 305.35+100*barRight;    %this is totally arbitrary values
+phasekx = -1.5+editKx; %...
+phaseky = 0.6+.5*editKy;          %...
+phase_offset = 3+editPhase;       %...
+j2 = .94+editJ2;              %...
+disp(editKx)
+disp(kx)
+disp(ky)
+disp(phasekx)
+disp(phaseky)
+disp(phase_offset)
+disp(j2)
+
+
+%% Read image
+global fullpathname
+if( isempty(fullpathname)==1)
+    %By default use the holo.png image.... if we're sending this out to a
+    %client it should probably be something along the lines of "NO IMAGE
+    %LOADED" ... I'll fix that up later tonight probably. 
+    fname = 'holo.png';
+    holo = imread( fname );
 else
-    Image = double(image); %this is pretty much based on how we read this file
-    %For example, loading in the cameraman.tif will use the
-    %double(imread(...)) while the NxN image uploaded from a computer (from
-    %my testing) ususally used just double(...)
-end
-% [y1,x1,z1] = size(Image);
-% disp(y1);
-% disp(x1);
-% disp(z1);
-Image = upsample(Image,2);
-Image = upsample(Image',2)';
-Image = imfilter(Image,fspecial('gaussian',[10,10],2),'symmetric');
-% apply Guassian filter
-[N, ~] = size(Image);      % assuming image is N x N dimensions
-%% Construct Reference Field
-U_r = zeros(N);             % reference field is plane wave
-for y = 1:N
-    for x = 1:N
-        U_r(y,x) = exp(-1i*k(t));
-        t = t + dt;
+    %This part is necessary incase the file needs to have it's array values
+    %shifted around. 
+    i=imread(fullpathname);
+    image = i(:, :, 1);
+    
+    [y1,x1,z1] = size(image);
+    if(x1~=y1)
+    holo = double(imread(image)); %if the variables below do not display PIXEL (ie 256 256 1) use this if not use other
+    else
+    holo = double(image);
+    
     end
+disp(fullpathname)
 end
-
-%% Hologram
-hologram = Image + U_r;                 % field
-hologram = hologram.*conj(hologram);    % intensity
 
 if(arg==1)
-   figure(1);
-   %original image i think
-   %set(handles.text3,'String',fullpathname);
-   imshow(hologram);
+
+figure(1); imagesc(abs(holo)); colormap 'gray';
 end
-imagesc(hologram);
-title('Hologram - Space Domain');
-colormap gray;
 
-%% Fourier Domain
-holo_FT = fft2(hologram);
-holo_FT = fftshift(holo_FT);
 
+%% Do reconstruction - FFT
+holo_fft = fftshift(fft2(holo)); holo_fft_max = max(max(abs(holo_fft)));
 if(arg==2)
-    %image vs reconstruction
-    figure(2);
-    imshow(holo_FT);
+figure(2); imagesc(abs(holo_fft)); caxis( [ 0 holo_fft_max/1000] ); colormap 'jet';
 end
-imagesc(abs(holo_FT));
-title('Hologram - Fourier Domain');
-caxis(caxis().*[0,0.01]);               % easier to determine frequency peaks
+%% Do reconstruction - Create Filters
 
-%% Filter
-holo_filter = zeros(N);
-patch = fspecial('gaussian',[filter_width+1,filter_width+1],filter_width/4);
+% calculate window functions
+temp = size( holo ); Ny = temp(1); Nx = temp(2);
+[X,Y] = meshgrid(1:Nx, 1:Ny);
+windowX = Nx/2+kx+1;
+windowY = Ny/2+(ky+1);
+windowW = Nx*filter_width_x/1.0;
+windowH = Ny*filter_width_y/1.0;
+        
+filter1 = 0.4 + 0.6 * cos( (Y-windowY) / windowH * pi*0.6 );
+filter2 = ( 0.4 + 0.6 * cos( (X-windowX) / windowW * pi*0.6 ) );
+mask1 = abs(Y-windowY) < windowH;
+mask2 = abs(X-windowX) < windowW;
+holo_window = filter1.*filter2.*mask1.*mask2;        
+        
+windowX = Nx/2+2*kx+1;
+windowY =  Ny/2+(2*ky+1);
+filter1 = 0.4 + 0.6 * cos( (Y-windowY) / windowH * pi*0.6 );
+filter2 = ( 0.4 + 0.6 * cos( (X-windowX) / windowW * pi*0.6 ) );
+mask1 = abs(Y-windowY) < windowH;
+mask2 = abs(X-windowX) < windowW;
+holo_window2 = filter1.*filter2.*mask1.*mask2;        
 
-holo_filter(filter_center_y-filter_width/2:filter_center_y+filter_width/2, ...
-             filter_center_x-filter_width/2:filter_center_x+filter_width/2) = patch;   % bandpass filter
+% calculate phase correction
+holo_phasecorr1= exp( -2*pi*1i*Y/Ny*ky ) .* exp( -2*pi*1i*X/Nx*kx ) ;%* exp( 1i*phase_offset);
+holo_phasecorr2= exp( -2*pi*1i*Y/Ny*2*ky ) .* exp( -2*pi*1i*X/Nx*2*kx );% * exp( 1i*2*phase_offset);
+        
+% calculate phase correction for final image
+holo_phasecorr = exp( -2*pi*1i*Y/Ny*phaseky ) .* exp( -2*pi*1i*X/Nx*phasekx ) * exp( 1i*phase_offset); 
 
+%% Reconstruction -- Apply filters & Inverse FT
+holo_fft1 = holo_fft .* holo_window;
+holo_fft2 = holo_fft .* holo_window2;
 
+% Do inverse FFT
+holo_reco1 = ifft2( fftshift(holo_fft1) ) .* holo_phasecorr1;
+holo_reco2 = ifft2( fftshift(holo_fft2) ) .* holo_phasecorr2;
+
+%% Phase shift
+
+% Do statistics and shift phase in real, imag images
+[histcnt,histbin] = histcounts( angle(holo_reco1(:)), 100);
+[histmax,histmaxind] = max(histcnt);
+histmaxpos = histbin(histmaxind);
+histphase_offset = histmaxpos;
+holo_reco1 = holo_reco1 .* exp(-1i * histphase_offset);
+holo_reco2 = holo_reco2 .* exp(-1i * 2*histphase_offset);
+
+hmax = max( max(max(abs(holo_reco1))), max(max(abs(holo_reco2)))); 
 if(arg==3)
-    %fourier
-    figure(3);
-    imshow(holo_FT);
+figure(3);
+subplot(2,3,1); imagesc( abs(holo_reco1) ); caxis([ 0 hmax] );
+subplot(2,3,2); imagesc( angle(holo_reco1) ); caxis([ -3.14 3.14]);
+subplot(2,3,3); hist( angle(holo_reco1(:)), 100);
+subplot(2,3,4); imagesc( abs(holo_reco2) ); caxis([ 0 hmax] );
+subplot(2,3,5); imagesc( angle(holo_reco2) ); caxis([ -3.14 3.14]);
+subplot(2,3,6); hist( angle(holo_reco2(:)), 100);
 end
-imagesc(abs(holo_FT));
-title('Filtered Hologram');
 
-%% Space Domain
-holo_IFT = fftshift(holo_FT);
-holo_IFT = ifft2(holo_IFT);
+%% Compose final image
+holo_reco = j1*real(holo_reco1) + j2*1i* real(holo_reco2);
+
+% correct phase
+holo_reco = holo_reco .* holo_phasecorr;
 if(arg==4)
-    %filtered
-   figure(4);
-    imshow(holo_IFT);
+figure(4); imagesc( abs(holo_reco) ); colormap 'gray';
 end
-subplot(1,2,1);
-imagesc(abs(holo_IFT));
-title('Amplitude');
-subplot(1,2,2);
-imagesc(angle(holo_IFT));
-title('Phase');
-suptitle('Hologram');
-global barLeft;
-if(barLeft<.5)
-    colormap gray;
-else
-    colormap summer;
-end
-% colormap gray;
-
-%% Reconstruction
-plane_wave = zeros(N);              % plane wave to match reference field
-k_plane = 2*pi * [k_y, k_x];        % plane wave k-vector
-for y = 1:N
-    for x = 1:N
-        plane_wave(y,x) = exp(-1i*(k_plane(1)*y+k_plane(2)*x));
-    end
-end
-
-reconstruction = holo_IFT.*plane_wave;
 if(arg==5)
-    %resolved imaging
-    figure(5);
-    imshow(reconstruction);
+figure(5); imagesc( angle(holo_reco) ); colormap 'gray';
 end
-subplot(2,2,1);
-imagesc(abs(Image));
-title('Amplitude');
-subplot(2,2,2);
-imagesc(angle(Image));
-title('Phase');
-subplot(2,2,3);
-imagesc(abs(reconstruction));
-title('Amplitude');
-subplot(2,2,4);
-imagesc(angle(reconstruction));
-title('Phase');
-suptitle(sprintf('Image vs \n Reconstruction'));
-colormap gray;
